@@ -1,0 +1,25 @@
+# Testing Framework
+pytest==7.4.3
+pytest-xdist==3.5.0
+pytest-html==4.1.1
+
+# UI Automation
+playwright>=1.40.0
+
+# API Testing
+requests==2.31.0
+
+# Reporting
+allure-pytest==2.13.2
+
+# Property-Based Testing
+hypothesis==6.92.1
+
+# Data Validation
+jsonschema==4.20.0
+
+# Logging
+structlog==23.2.0
+
+# Utilities
+python-dotenv==1.0.0
