@@ -12,7 +12,7 @@ from pathlib import Path
 from dataclasses import dataclass, field, asdict
 
 
-EnvironmentType = Literal["dev", "test", "staging", "prod"]
+EnvironmentType = Literal["dev", "test", "staging", "prod", "sit5"]
 
 
 @dataclass
@@ -115,6 +115,9 @@ class EnvironmentManager:
             api_verify_ssl=True,
             max_retries=5,
         ),
+        "sit5": EnvironmentConfig(
+            name="sit5"
+        )
     }
     
     def __init__(self, config_file: Optional[str] = None):
@@ -154,7 +157,7 @@ class EnvironmentManager:
                 data = json.load(f)
             
             for env_name, env_data in data.items():
-                if env_name in ["dev", "test", "staging", "prod"]:
+                if env_name in EnvironmentType:
                     # 合并默认配置和文件配置
                     if env_name in self._configs:
                         current_config = self._configs[env_name].to_dict()
@@ -176,7 +179,7 @@ class EnvironmentManager:
         """
         # 获取当前环境
         env_name = os.getenv("TEST_ENV", "test")
-        if env_name in ["dev", "test", "staging", "prod"]:
+        if env_name in EnvironmentType:
             self._current_env = env_name
         else:
             import warnings
@@ -273,7 +276,7 @@ class EnvironmentManager:
         Args:
             env: 目标环境名称
         """
-        if env not in ["dev", "test", "staging", "prod"]:
+        if env not in EnvironmentType:
             raise ValueError(f"Invalid environment: {env}. Must be one of: dev, test, staging, prod")
         
         if env not in self._configs:
@@ -289,7 +292,7 @@ class EnvironmentManager:
             env: 环境名称
             config: 环境配置对象
         """
-        if env not in ["dev", "test", "staging", "prod"]:
+        if env not in EnvironmentType:
             raise ValueError(f"Invalid environment: {env}")
         
         config.name = env

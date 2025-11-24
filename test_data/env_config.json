@@ -18,7 +18,6 @@
     "parallel_workers": "auto",
     "enable_parallel": true,
     "custom_config": {}
-
   },
   "dev": {
     "name": "dev",
