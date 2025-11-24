@@ -103,11 +103,9 @@ def pytest_sessionstart(session):
     由于此时 allure-results 目录已被清理，因此在此处创建 environment.properties 文件是合适的。
     """
     logger = TestLogger.get_logger("SessionStart")
-    logger.info("=" * 80)
     logger.info("Test Session Starting")
     logger.info(f"Session ID: {session.sessionid if hasattr(session, 'sessionid') else 'N/A'}")
     logger.info(f"Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    logger.info("=" * 80)
     
     # Create Allure environment properties file after directory is cleaned
     _create_allure_environment_properties()
@@ -124,12 +122,10 @@ def pytest_sessionfinish(session, exitstatus):
     - 最终日志记录和报告
     """
     logger = TestLogger.get_logger("SessionFinish")
-    
-    logger.info("=" * 80)
+
     logger.info("Test Session Finishing")
     logger.info(f"Exit Status: {exitstatus}")
     logger.info(f"End Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    logger.info("=" * 80)
     
     # Aggregate test results
     if hasattr(session.config, '_test_results'):
@@ -153,8 +149,7 @@ def pytest_sessionfinish(session, exitstatus):
     cache = DataCache.get_instance()
     cache.clear()
     logger.info("Data cache cleared at session end")
-    
-    logger.info("=" * 80)
+
 
 
 def pytest_runtest_logreport(report):
@@ -209,16 +204,12 @@ def session_setup_teardown():
     - 记录会话生命周期事件
     """
     logger = TestLogger.get_logger("SessionFixture")
-    logger.info("=" * 80)
     logger.info("Session fixture setup starting")
-    logger.info("=" * 80)
     
     yield
     
     # Session teardown
-    logger.info("=" * 80)
     logger.info("Session fixture teardown starting")
-    logger.info("=" * 80)
     
     # Clear data cache to prevent data leakage between test sessions
     cache = DataCache.get_instance()
@@ -262,17 +253,13 @@ def test_logger(request):
 
     """
     logger = TestLogger.get_logger(f"Test.{request.node.name}")
-    
-    logger.info("-" * 80)
+
     logger.info(f"Test started: {request.node.name}")
     logger.info(f"Test location: {request.node.nodeid}")
-    logger.info("-" * 80)
     
     yield logger
-    
-    logger.info("-" * 80)
+
     logger.info(f"Test finished: {request.node.name}")
-    logger.info("-" * 80)
     
     # Attach test log to Allure report
     try:

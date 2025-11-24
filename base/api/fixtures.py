@@ -199,21 +199,17 @@ def log_api_test_info(request, api_logger):
     """
     test_name = request.node.name
     test_location = request.node.nodeid
-    
-    api_logger.info("=" * 80)
+
     api_logger.info(f"API Test Started: {test_name}")
     api_logger.info(f"Test Location: {test_location}")
-    api_logger.info("=" * 80)
     
     # 添加 Allure 步骤
     with allure.step(f"Starting API test: {test_name}"):
         pass
     
     yield
-    
-    api_logger.info("=" * 80)
+
     api_logger.info(f"API Test Finished: {test_name}")
-    api_logger.info("=" * 80)
     
     # 添加 Allure 步骤
     with allure.step(f"Finished API test: {test_name}"):
@@ -324,10 +320,8 @@ def setup_api_test_environment():
     在测试会话结束时清理资源
     """
     logger = TestLogger.get_logger("APIEnvironment")
-    
-    logger.info("=" * 80)
+
     logger.info("Setting up API test environment")
-    logger.info("=" * 80)
     
     # 验证配置
     is_valid, errors = Settings.validate()
@@ -338,15 +332,12 @@ def setup_api_test_environment():
     
     # 记录配置摘要
     config_summary = Settings.get_config_summary()
-    logger.info(f"API Configuration: {config_summary.get('api')}")
     logger.info(f"Environment: {config_summary.get('environment')}")
     
     yield
     
     # 清理
-    logger.info("=" * 80)
     logger.info("Cleaning up API test environment")
-    logger.info("=" * 80)
     
     # 清理数据缓存
     cache = DataCache.get_instance()

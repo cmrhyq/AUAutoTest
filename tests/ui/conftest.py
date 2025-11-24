@@ -6,3 +6,4 @@ UI 测试专用的 conftest 配置
 """
 
 # 导入 UI fixtures（仅在 UI 测试目录下生效）
+from base.ui.fixtures import *
