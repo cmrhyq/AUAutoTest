@@ -165,6 +165,9 @@ class BaseService:
         
         if 'data' in kwargs:
             log_data['data'] = '***' if kwargs['data'] else None
+
+        if "headers" in kwargs:
+            log_data['headers'] = kwargs['headers']
         
         self.logger.info(f"Request: {log_data}")
     
