@@ -170,7 +170,7 @@ class BaseService:
         if "headers" in kwargs:
             log_data['headers'] = kwargs['headers']
         
-        self.logger.info(f"Request: {log_data}")
+        self.logger.debug(f"Request Information: {log_data}")
     
     def _log_response(self, response: requests.Response) -> None:
         """
@@ -192,7 +192,7 @@ class BaseService:
         except Exception:
             log_data['response_body'] = '(non-JSON or empty)'
         
-        self.logger.info(f"Response: {log_data}")
+        self.logger.debug(f"Response Information: {log_data}")
     
     def _make_request_with_retry(
         self,
