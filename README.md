@@ -1,6 +1,6 @@
-# Test Automation Framework
+# API UI Test Automation Framework
 
-基于 Pytest + Playwright + Requests + Allure 的高性能 UI/API 自动化测试框架
+AUTestAutomation 是一款基于 Pytest + Playwright + Requests + Allure 的高性能 UI/API 自动化测试框架
 
 ## 项目简介
 
