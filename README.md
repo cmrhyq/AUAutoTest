@@ -237,11 +237,11 @@ python generate_report.py clean
 ```bash
 # 方式 1: 运行测试并立即查看报告（推荐）
 pytest --alluredir=./report/allure-results
-allure serve ./report/allure-results
+allure serve ./report/allure-results --language zh-CN
 
 # 方式 2: 生成静态报告到指定目录
 pytest --alluredir=allure-results
-allure generate ./report/allure-results/ -o ./report/allure-report/ --clean
+allure generate ./report/allure-results/ -o ./report/allure-report/ --clean --language zh-CN
 
 # 方式 3: 打开已生成的静态报告
 allure open ./report/allure-report
