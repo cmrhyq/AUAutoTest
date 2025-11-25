@@ -43,7 +43,7 @@ class TestLoginPage(object):
             expect(page).to_have_title("运营视图")
 
         with AllureHelper.step("截取页面截图"):
-            login_page.take_screenshot("page_opened")
+            login_page.take_screenshot("panji_login_page")
             logger.info("Screenshot captured")
 
         logger.info("===  Test completed successfully ===")
