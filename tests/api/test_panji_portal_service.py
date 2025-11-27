@@ -6,7 +6,7 @@ import allure
 import pytest
 
 from base.api.fixtures import api_cache
-from base.api.services.panji_portal_portal_service import PanJiPortalService, PortalSignEntity
+from base.api.services.portal_service import PanJiPortalService, PortalSignEntity
 
 
 @pytest.mark.api

@@ -85,3 +85,27 @@ class PanJiPortalService(BaseService):
         }
         response = self.get(endpoint="/openapi/portal/restApi/secondFieldInfo/list", headers=headers)
         return response.json()
+
+    def create_cluster_cell(self, prodInstName: str) -> Dict[str, Any]:
+        url = "/openapi/portal/restApi/cluster/add"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        body = {
+            "prodInstName": prodInstName,
+            "prodInstCode": prodInstName,
+            "prodInstType": "k8s",
+            "caCert": None,
+            "clientCert": None,
+            "envCode": "生产环境",
+            "planeCode": "a",
+            "cellCode": "a",
+            "endPoints": None,
+            "context": None,
+            "planeName": "a",
+            "cellName": "a",
+            "envName": "生产环境"
+        }
+        response = self.post(endpoint=url, json=body, headers=headers)
+        return response.json()

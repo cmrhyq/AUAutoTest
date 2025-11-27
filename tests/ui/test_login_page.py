@@ -2,7 +2,7 @@ import pytest
 import allure
 from playwright.sync_api import Page, expect
 
-from base.ui.pages.panji.login_page import LoginPage
+from base.ui.pages.login_page import LoginPage
 from core import TestLogger
 from core.allure.allure_helper import AllureHelper
 
