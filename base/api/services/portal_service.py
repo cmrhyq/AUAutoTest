@@ -13,8 +13,13 @@ class PortalSignEntity(object):
     tenant_code: str = None
     expire_time: int = 18000000
 
-class PanJiPortalService(BaseService):
+@dataclass
+class ClusterPlaneEntity(object):
+    instance_id: str = None
+    prod_inst_name: str = None
 
+
+class PanJiPortalService(BaseService):
     DEFAULT_BASE_URL = 'http://openapi.portal.nbpod3-31-181-20030.4a.cmit.cloud:20030'
 
     def __init__(self, base_url: str = None, logger: logging.Logger = None):
@@ -86,15 +91,18 @@ class PanJiPortalService(BaseService):
         response = self.get(endpoint="/openapi/portal/restApi/secondFieldInfo/list", headers=headers)
         return response.json()
 
-    def create_cluster_cell(self, prodInstName: str) -> Dict[str, Any]:
+    def create_cluster_plane(self, cluster_info: ClusterPlaneEntity) -> Dict[str, Any]:
+        """
+        新增集群平面单元
+        """
         url = "/openapi/portal/restApi/cluster/add"
         cache = DataCache.get_instance()
         headers = {
             "Authorization": cache.get("token"),
         }
         body = {
-            "prodInstName": prodInstName,
-            "prodInstCode": prodInstName,
+            "prodInstName": cluster_info.prod_inst_name,
+            "prodInstCode": cluster_info.prod_inst_name,
             "prodInstType": "k8s",
             "caCert": None,
             "clientCert": None,
@@ -108,4 +116,54 @@ class PanJiPortalService(BaseService):
             "envName": "生产环境"
         }
         response = self.post(endpoint=url, json=body, headers=headers)
+        return response.json()
+
+    def query_cluster_plane(self, cluster_info: ClusterPlaneEntity) -> Dict[str, Any]:
+        """
+        查询集群平面单元
+        """
+        url = "/openapi/portal/restApi/cluster/list"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        params = {
+            "prodInstName": cluster_info.prod_inst_name,
+        }
+        response = self.get(endpoint=url, params=params, headers=headers)
+        return response.json()
+
+    def update_cluster_plane(self, cluster_info: ClusterPlaneEntity) -> Dict[str, Any]:
+        url = "/openapi/portal/restApi/cluster/update"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        body = {
+            "instanceId": cluster_info.instance_id,
+            "prodInstCode": cluster_info.prod_inst_name,
+            "prodInstName": cluster_info.prod_inst_name,
+            "prodInstType": "k8s",
+            "cellName": "multest",
+            "cellCode": "multest",
+            "envCode": "PORD",
+            "planeCode": "multest",
+            "planeName": "multest"
+        }
+        response = self.patch(endpoint=url, json=body, headers=headers)
+        return response.json()
+
+    def delete_cluster_plane(self, cluster_info: ClusterPlaneEntity) -> Dict[str, Any]:
+        """
+        删除集群平面单元
+        """
+        url = "/openapi/portal/restApi/cluster/delete"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        params = {
+            "instanceId": cluster_info.instance_id,
+        }
+        response = self.delete(endpoint=url, params=params, headers=headers)
         return response.json()
