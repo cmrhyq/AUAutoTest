@@ -3,6 +3,7 @@
   "basic_auth_username": "auto_test_probe",
   "basic_auth_password": "Abc123!@#$",
   "tenant_code": "tenant_admin",
+  "prod_inst_name": "1211",
 
   "ui_base_url": "http://portal.nbpod3-31-181-20030.4a.cmit.cloud:20030/portal/web/#/login",
   "ui_username": "huangyuqiao",
