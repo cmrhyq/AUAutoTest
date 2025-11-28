@@ -7,8 +7,28 @@ import pytest
 from config import Settings
 from core import TestLogger, DataCache
 
+TEST_RESULTS = {"passed": 0, "failed": 0, "skipped": 0, "error": 0}
+
 
 # ==================== Pytest Hooks for Parallel Execution ====================
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """收集每个用例的执行结果"""
+    outcome = yield
+    report = outcome.get_result()
+
+    # 只统计用例执行阶段（call）的结果，跳过 setup/teardown
+    if report.when == "call":
+        if report.outcome == "passed":
+            TEST_RESULTS["passed"] += 1
+        elif report.outcome == "failed":
+            TEST_RESULTS["failed"] += 1
+        elif report.outcome == "skipped":
+            TEST_RESULTS["skipped"] += 1
+    # 捕获用例执行中的错误（如setup失败）
+    elif report.when == "setup" and report.outcome == "failed":
+        TEST_RESULTS["error"] += 1
 
 def pytest_configure(config):
     """
@@ -126,24 +146,20 @@ def pytest_sessionfinish(session, exitstatus):
     logger.info("Test Session Finishing")
     logger.info(f"Exit Status: {exitstatus}")
     logger.info(f"End Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    
+
     # Aggregate test results
-    if hasattr(session.config, '_test_results'):
-        results = session.config._test_results
-        total = len(results)
-        passed = sum(1 for r in results if r.get('outcome') == 'passed')
-        failed = sum(1 for r in results if r.get('outcome') == 'failed')
-        skipped = sum(1 for r in results if r.get('outcome') == 'skipped')
+    total = sum(TEST_RESULTS.values())
         
-        logger.info("Test Results Summary:")
-        logger.info(f"  Total: {total}")
-        logger.info(f"  Passed: {passed}")
-        logger.info(f"  Failed: {failed}")
-        logger.info(f"  Skipped: {skipped}")
+    logger.info("Test Results Summary:")
+    logger.info(f"  Total: {total}")
+    logger.info(f"  Passed: {TEST_RESULTS['passed']}")
+    logger.info(f"  Failed: {TEST_RESULTS['failed']}")
+    logger.info(f"  Skipped: {TEST_RESULTS['skipped']}")
+    logger.info(f"  Error: {TEST_RESULTS['error']}")
         
-        if total > 0:
-            pass_rate = (passed / total) * 100
-            logger.info(f"  Pass Rate: {pass_rate:.2f}%")
+    if total > 0:
+        pass_rate = (TEST_RESULTS['passed'] / total) * 100
+        logger.info(f"  Pass Rate: {pass_rate:.2f}%")
     
     # Clear data cache at session end
     cache = DataCache.get_instance()
