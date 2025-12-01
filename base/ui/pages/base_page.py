@@ -6,7 +6,10 @@ UI 测试基础页面类
 """
 
 import logging
+import re
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Optional, Union
 from playwright.sync_api import Page, Locator, TimeoutError as PlaywrightTimeoutError
@@ -14,6 +17,46 @@ from playwright.sync_api import Page, Locator, TimeoutError as PlaywrightTimeout
 from config.settings import Settings
 from core.log.logger import TestLogger
 from core.allure.allure_helper import AllureHelper
+
+@dataclass
+class WaitUntil(Enum):
+    """
+    wait_until: 等待条件，可选值：
+    - load = 'load': 等待 load 事件触发
+    - dom = 'domcontentloaded': 等待 DOMContentLoaded 事件触发（默认）
+    - net = 'networkidle': 等待网络空闲
+    - commit = 'commit': 等待网络响应接收完成
+    """
+    load = "load"
+    dom = "domcontentloaded"
+    net = "networkidle"
+    commit = "commit"
+
+@dataclass
+class ElementState(Enum):
+    """
+    state: 元素状态，可选值：
+    - 'attached': 元素已附加到 DOM
+    - 'detached': 元素已从 DOM 分离
+    - 'visible': 元素可见（默认）
+    - 'hidden': 元素隐藏
+    """
+    attached = "attached"
+    detached = "detached"
+    visible = "visible"
+    hidden = "hidden"
+
+@dataclass
+class LoadState(Enum):
+    """
+    state: 加载状态，可选值：
+    - load = 'load': 等待 load 事件
+    - dom = 'domcontentloaded': 等待 DOMContentLoaded 事件
+    - net = 'networkidle': 等待网络空闲
+    """
+    load = "load"
+    dom = "domcontentloaded"
+    net = "networkidle"
 
 
 class BasePage:
@@ -43,24 +86,35 @@ class BasePage:
         
         # 设置默认超时时间
         self.page.set_default_timeout(Settings.BROWSER_TIMEOUT)
+
+        #左侧菜单
+        self.left_menu=page.locator("//div[@class='layout-menu']")
+
+        # 右上角菜单
+        self.hover_top_menu = page.locator("div[role='button'] span")  # 租户 hover
+        self.li_settings = page.locator("//li[contains(.,'个人设置')]")  # 个人设置
+        self.li_logout = page.get_by_text("退出登录")  # 退出登陆
+
+        # 个人设置弹窗
+        self.dropdown_choose_tenant = page.get_by_role("dialog", name="个人设置").get_by_placeholder("请选择租户")  # 选择租户
+        self.li_set_tenant = self.page.locator("li")  # 下拉租户列表
+
+        # 视图切换
+        self.hover_view = page.locator("span[role='button']") # 视图 hover
         
         self.logger.debug(f"Initialized {self.__class__.__name__}")
     
-    def navigate(self, url: str, wait_until: str = "domcontentloaded") -> None:
+    def navigate(self, url: str, wait_until: WaitUntil = WaitUntil.dom) -> None:
         """
         导航到指定 URL
         
         Args:
             url: 目标 URL
-            wait_until: 等待条件，可选值：
-                - 'load': 等待 load 事件触发
-                - 'domcontentloaded': 等待 DOMContentLoaded 事件触发（默认）
-                - 'networkidle': 等待网络空闲
-                - 'commit': 等待网络响应接收完成
+            wait_until: WaitUntil
         
         使用示例:
             page.navigate("https://example.com")
-            page.navigate("https://example.com/login", wait_until="load")
+            page.navigate("https://example.com/login", wait_until=WaitUntil.load)
         """
         try:
             self.logger.info(f"Navigating to URL: {url}")
@@ -78,12 +132,74 @@ class BasePage:
             self.logger.error(f"Failed to navigate to {url}: {e}")
             self._capture_failure_screenshot(f"navigation_error_{self._get_timestamp()}")
             raise
+
+    def switch_tenant(self,tenant):
+        """
+        切换租户
+        """
+        #如果要切换的租户和当前页面租户相同，则无须切换
+        if tenant in self.hover_top_menu.text_content():
+            self.logger.info("要切换的租户和当前页面租户相同，则无须切换")
+            return
+
+        self.hover_top_menu.hover()
+        self.hover_top_menu.click()
+        self.li_settings.click()
+        self.dropdown_choose_tenant.click()
+        self.li_set_tenant.filter(has_text=re.compile(r"^" + tenant + "$")).locator("span").last.click()
+        self.page.wait_for_load_state(state="load")
+        self.wait_switch_tenant_done() #切换租户后等待页面完成加载
+        self.logger.info("切换租户完成")
+
+
+    def wait_switch_tenant_done(self):
+        """切换租户后等待页面完成加载"""
+        self.page.wait_for_timeout(3000)
+        self.left_menu.wait_for(state="visible")  # 等待主页左侧菜单加载
+        self.page.get_by_role("main").first.wait_for(state="attached")  # 等待主页body加载
+        for i in range(10):
+            self.logger.info("等待{0}秒".format(str(i)))
+            if self.page.get_by_text("平台运营概览").is_visible() :
+                self.logger.info("平台运营概览页面加载成功")
+                break
+            if self.page.locator("iframe").content_frame.get_by_text("服务管理").is_visible() :
+                self.logger.info("服务管理页面加载成功")
+                break
+            if self.page.locator("iframe").content_frame.get_by_text("组件服务清单", exact=True).is_visible():
+                self.logger.info("组件服务清单页面加载成功")
+                break
+            if self.page.locator("iframe").content_frame.get_by_role("button", name="查询").is_visible():
+                self.logger.info("首页页面查询按钮加载成功")
+                break
+            self.page.wait_for_timeout(1000)
+
+    def switch_view(self,view):
+        """
+        切换视图： 租户视图，运营视图，运维视图
+        """
+        current_tenant=self.hover_top_menu.text_content()
+        self.logger.info("当前租户为{0}".format(current_tenant))
+        # self.hover_view.hover()
+        self.hover_view.hover()
+        self.hover_view.click()
+        self.page.get_by_role("listitem").filter(has_text=view).click()
+        self.page.wait_for_load_state(state="load")
+        self.logger.info("切换视图完成")
+
+
+    def logout(self):
+        """
+        登出
+        """
+        self.hover_top_menu.hover()
+        self.li_logout.click()
+        self.page.wait_for_load_state(state="load")
     
     def wait_for_element(
         self, 
         selector: str, 
         timeout: Optional[int] = None,
-        state: str = "visible"
+        state: ElementState = ElementState.visible
     ) -> Locator:
         """
         等待元素出现并返回定位器
@@ -93,11 +209,7 @@ class BasePage:
         Args:
             selector: 元素选择器（CSS、XPath 等）
             timeout: 超时时间（毫秒），如果为 None 则使用默认超时
-            state: 元素状态，可选值：
-                - 'attached': 元素已附加到 DOM
-                - 'detached': 元素已从 DOM 分离
-                - 'visible': 元素可见（默认）
-                - 'hidden': 元素隐藏
+            state: 元素状态，ElementState
         
         Returns:
             Locator: Playwright 定位器对象
@@ -596,17 +708,14 @@ class BasePage:
     
     def wait_for_load_state(
         self, 
-        state: str = "load",
+        state: LoadState = LoadState.load,
         timeout: Optional[int] = None
     ) -> None:
         """
         等待页面加载到指定状态
         
         Args:
-            state: 加载状态，可选值：
-                - 'load': 等待 load 事件
-                - 'domcontentloaded': 等待 DOMContentLoaded 事件
-                - 'networkidle': 等待网络空闲
+            state: 加载状态，LoadState
             timeout: 超时时间（毫秒）
             
         使用示例:
