@@ -37,9 +37,10 @@ class ClusterPlaneEntity(object):
     prod_inst_name: str = None
 
 @dataclass
-class CreateSystemEntity(object):
+class SystemEntity(object):
     """
-    创建系统需要的参数实体
+    创建 or 更新系统需要的参数实体
+    system_id: 系统编号
     system_name: 系统名称
     system_code: 系统编码
     system_desc: 系统描述
@@ -48,6 +49,7 @@ class CreateSystemEntity(object):
     create_id: 创建者编号
     username: 创建者用户名
     """
+    system_id: str = None
     system_name: str = None
     system_code: str = None
     system_desc: str = None
@@ -381,7 +383,7 @@ class PanJiPortalService(BaseService):
         response = self.post(endpoint=url, json=body, headers=headers)
         return response.json()
 
-    def create_system(self, system: CreateSystemEntity):
+    def create_system(self, system: SystemEntity):
         """
         创建系统
         """
@@ -424,6 +426,118 @@ class PanJiPortalService(BaseService):
                 "nfs": []
             },
             "username": username
+        }
+        response = self.post(endpoint=url, json=body, headers=headers)
+        return response.json()
+
+    def system_resource_quota_detail(self, code_list: BasicCodeEntity):
+        """
+        系统资源配额详情
+        """
+        self.logger.info(f"System resource quota detail")
+        url = f"/openapi/elastic-compute/v2/cells/{code_list.cell_code}/tenants/{code_list.tenant_code}/systems/{code_list.system_code}/quota/detail"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        response = self.get(endpoint=url, headers=headers)
+        return response.json()
+
+    def create_application(self, app_code: str, app_name: str, app_type: str, workload_type: str, system_id: str):
+        """
+        创建应用
+        app_code: 应用编号
+        app_name: 应用名称
+        app_type: 应用类型
+        workload_type: 工作负载类型
+        system_id: 所属系统编号
+        """
+        self.logger.info(f"Create application")
+        url = "/openapi/portal/restApi/application/add"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        body = {
+            "applicationSourceCode": app_code,
+            "applicationSourceName": app_name,
+            "environment": "PROD",
+            "applicationSourceType": app_type,
+            "workloadType": workload_type,
+            "systemId": system_id,
+            "microServiceCode": ""
+        }
+        response = self.post(endpoint=url, json=body, headers=headers)
+        return response.json()
+
+    def update_system(self, system: SystemEntity):
+        """
+        更新系统
+        """
+        self.logger.info(f"Update system")
+        url = "/openapi/portal/restApi/system/update"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        body = {
+            "systemId": system.system_id,
+            "systemName": system.system_name,
+            "systemCode": system.system_code,
+            "systemDesc": "cesdsfdssddsfds",
+            "systemType": None,
+            "status": 1,
+            "parentId": None,
+            "tenantId": 1,
+            "systemPlane": None,
+            "systemArea": None,
+            "systemRank": None,
+            "systemLevel": "SYS_2",
+            "systemSection": "算力调度",
+            "createTime": "2024-12-12 14:47:44",
+            "updateTime": None,
+            "systemEnvironment": "PROD",
+            "fieldOne": "b39a802ef7834b17b3cd9e76dd6f20230817",
+            "fieldTwo": "b39a802ef7834b17b3cd9e76dd6g20230817",
+            "fieldThree": None,
+            "createId": system.create_id,
+            "sysId": None,
+            "userName": system.username,
+            "ids": None,
+            "alias": "shengsong",
+            "currentUserId": None,
+            "fieldOneName": "算力调度一级域",
+            "fieldTwoName": "算力调度二级域",
+            "tenantUserEntityId": 0,
+            "isManager": "true",
+            "tenantCode": "tenant_admin",
+            "tenantName": "平台运营租户",
+            "isAuthorized": "true"
+        }
+        response = self.post(endpoint=url, json=body, headers=headers)
+        return response.json()
+
+    def update_application(self, app_id: str, system_id: str):
+        """
+        更新应用
+        app_id: 更新的应用编号
+        system_id: 所属的系统
+        """
+        self.logger.info(f"Update application")
+        url = "/openapi/portal/restApi/application/update"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        body = {
+            "applicationSourceId": app_id,
+            "applicationSourceCode": "cs20241212yy",
+            "applicationSourceName": "cs20241212yyxiugai",
+            "applicationSourceType": "web_type",
+            "tenantId": 1,
+            "systemId": system_id,
+            "environment": "PROD",
+            "workloadType": "Deployment"
         }
         response = self.post(endpoint=url, json=body, headers=headers)
         return response.json()
