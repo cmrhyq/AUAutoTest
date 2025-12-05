@@ -4,20 +4,20 @@ import allure
 import pytest
 
 from base.api.fixtures import api_cache
-from base.api.services.portal_service import PanJiPortalService, PortalUserEntity, ClusterPlaneEntity, \
+from base.api.services.portal_open_service import PanJiPortalOpenService, PortalUserEntity, ClusterPlaneEntity, \
     SystemEntity
 from core.allure.allure_helper import AllureHelper
 
 
 @pytest.mark.api
-@allure.feature("磐基门户服务API")
+@allure.feature("磐基门户OpenAPI服务")
 @allure.story("统一门户")
-class TestPanjiPortalAPI:
+class TestPanjiPortalOpenAPI:
 
     @pytest.fixture(scope="class")
-    def portal_service(self, api_logger):
+    def portal_service(self, api_env, api_logger):
         """创建 Panji Portal 服务实例"""
-        service = PanJiPortalService(logger=api_logger)
+        service = PanJiPortalOpenService(base_url=api_env.get("api_base_url"), logger=api_logger)
         yield service
         service.close()
 
