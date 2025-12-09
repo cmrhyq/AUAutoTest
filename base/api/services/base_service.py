@@ -225,11 +225,11 @@ class BaseService:
                 if "headers" in kwargs:
                     # 合并会话头和请求头
                     headers = kwargs['headers']
-                    headers['Content-Type'] = 'application/json'
+                    headers['Content-Type'] = 'application/json;charset=utf-8'
                     headers['User-Agent'] = get_random_pc_ua()
                     kwargs['headers'] = headers
                 else:
-                    headers = {'Content-Type': 'application/json', 'User-Agent': get_random_pc_ua()}
+                    headers = {'Content-Type': 'application/json;charset=utf-8', 'User-Agent': get_random_pc_ua()}
                     kwargs['headers'] = headers
 
                 # 记录请求信息

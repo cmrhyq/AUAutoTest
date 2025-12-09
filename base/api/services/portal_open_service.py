@@ -79,7 +79,7 @@ class PanJiPortalOpenService(BaseService):
         初始化 Panji Portal OpenAPI 服务
 
         Args:
-            base_url: API 基础 URL，默认使用 JSONPlaceholder 官方地址
+            base_url: API 基础 URL
             logger: 日志记录器
         """
         super().__init__(
@@ -517,6 +517,30 @@ class PanJiPortalOpenService(BaseService):
         response = self.post(endpoint=url, json=body, headers=headers)
         return response.json()
 
+    def user_system_authorization(self, user_id_list: list[str], system_id_list: list[str]):
+        """
+        用户系统授权接口，批量授权
+        user_id_list: 授权的用户id列表，["200685","201214"]
+        system_id_list: 授权的系统id列表
+        """
+        self.logger.info(f"User system authorization")
+        url = "/openapi/portal/restApi/batchAuthorization"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        body = {
+            "authorizedType": "1",
+            "type": "1",
+            "isManager": "0",
+            "expireTime": "",
+            "tenantId":"1",
+            "objectIdList": user_id_list,
+            "entityIdList": system_id_list
+        }
+        response = self.post(endpoint=url, json=body, headers=headers)
+        return response.json()
+
     def update_application(self, app_id: str, system_id: str):
         """
         更新应用
@@ -538,6 +562,30 @@ class PanJiPortalOpenService(BaseService):
             "systemId": system_id,
             "environment": "PROD",
             "workloadType": "Deployment"
+        }
+        response = self.post(endpoint=url, json=body, headers=headers)
+        return response.json()
+
+    def user_application_authorization(self, user_id_list: list[str], application_id_list: list[str]):
+        """
+        用户应用授权接口，批量授权
+        user_id_list: 授权的用户id列表，["200685","201214"]
+        application_id_list: 授权的应用id列表
+        """
+        self.logger.info(f"User application authorization")
+        url = "/openapi/portal/restApi/batchAuthorization"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        body = {
+            "authorizedType": "1",
+            "type": "2",
+            "isManager": "1",
+            "expireTime": "",
+            "tenantId":"1",
+            "objectIdList": user_id_list,
+            "entityIdList": application_id_list
         }
         response = self.post(endpoint=url, json=body, headers=headers)
         return response.json()
@@ -607,6 +655,19 @@ class PanJiPortalOpenService(BaseService):
             "ids": app_id
         }
         response = self.post(endpoint=url, json=body, headers=headers)
+        return response.json()
+
+    def system_quota_delete(self, code: BasicCodeEntity):
+        """
+        系统配额释放/删除
+        """
+        self.logger.info(f"System quota release delete")
+        url = f"/openapi/elastic-compute/v2/cells/{code.cell_code}/tenants/{code.tenant_code}/systems/{code.system_code}/quota/delete"
+        cache = DataCache.get_instance()
+        headers = {
+            "Authorization": cache.get("token"),
+        }
+        response = self.post(endpoint=url, headers=headers)
         return response.json()
 
     def delete_system(self, system_id: str, system_code: str):
